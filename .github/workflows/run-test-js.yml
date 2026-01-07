@@ -1,18 +1,19 @@
-name: Run test.js on change
+name: Run test.js always
 on:
   push:
     paths:
-      - test.js
+      - '**/test.js'
+  workflow_run:
+    workflows: [ "Run script.sh on change" ]
+    types:
+      - completed
 jobs:
   run-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v6
-
       - name: Run test.js
         run: |
           node --version
           node test.js
-
