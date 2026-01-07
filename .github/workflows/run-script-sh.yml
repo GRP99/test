@@ -1,0 +1,14 @@
+name: Run script.sh on change
+on:
+  push:
+    paths:
+      - script.sh
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run script.sh
+        run: sh script.sh
+
