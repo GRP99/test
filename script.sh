@@ -4,4 +4,4 @@ echo "Hello, World!"
 
 echo "Test completed"
 
-exit 1
+echo "Goodbye!"
