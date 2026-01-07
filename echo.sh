@@ -2,3 +2,5 @@
 
 echo "Hello, World!"
 
+echo "Test completed."
+
