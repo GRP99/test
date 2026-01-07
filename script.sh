@@ -2,6 +2,6 @@
 
 echo "Hello, World!"
 
-echo "Test completed."
+echo "Test completed"
 
 exit 1
