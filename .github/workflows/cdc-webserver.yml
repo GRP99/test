@@ -14,8 +14,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-changed-files:
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+    name: Check Changed Files
+    runs-on: ubuntu-latest
+    outputs:
+      flag: ${{ steps.changes.outputs.scripts }}
+    steps:
+      - name: Path Changes Filter
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            scripts:
+              - 'scripts/**'
+
   first-job:
-    if: ${{ always() && (github.ref == 'refs/heads/main') && (github.event_name == 'repository_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && !contains(toJson(github.event.pull_request.changed_files), 'scripts/'))) }}
+    if: github.event_name == 'repository_dispatch' || needs.check-changed-files.outputs.flag == 'false'
     name: (PROD) Build CDC Webserver Image
     runs-on: ubuntu-latest
     steps:
@@ -29,7 +44,7 @@ jobs:
           node test.js
 
   second-job:
-    if: (github.ref == 'refs/heads/main') && (github.event_name == 'repository_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true))
+    if: github.event_name == 'repository_dispatch' || needs.check-changed-files.outputs.flag == 'false'
     name: (PROD) Deploy CDC Webserver Image
     needs: first-job
     runs-on: ubuntu-latest
