@@ -30,7 +30,7 @@ jobs:
               - 'scripts/**'
 
   first-job:
-    if: github.event_name == 'repository_dispatch' || needs.check-changed-files.outputs.flag == 'false'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'repository_dispatch' || needs.check-changed-files.outputs.flag == 'false')
     name: (PROD) Build CDC Webserver Image
     runs-on: ubuntu-latest
     steps:
@@ -45,7 +45,7 @@ jobs:
 
   second-job:
     needs: first-job
-    if: github.event_name == 'repository_dispatch' || needs.check-changed-files.outputs.flag == 'false'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'repository_dispatch' || needs.check-changed-files.outputs.flag == 'false')
     name: (PROD) Deploy CDC Webserver Image
     runs-on: ubuntu-latest
     steps:
