@@ -2,4 +2,4 @@
 
 echo "Hello, World!"
 
-echo "This is script 2."
+echo "This is script 2!"
