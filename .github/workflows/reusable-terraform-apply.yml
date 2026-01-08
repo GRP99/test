@@ -1,0 +1,42 @@
+name: (Reusable) Infrastructure Deployment to AWS
+
+on:
+  workflow_call:
+    inputs:
+      path:
+        description: 'The path to the Script'
+        required: true
+        type: string
+
+jobs:
+  first-job:
+    name: First Job
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+
+    outputs:
+      changes: ${{ steps.flag.outputs.changes }}
+
+    steps:
+      - name: Execute script
+        id: flag
+        run: echo "changes=true" >> $GITHUB_OUTPUT
+
+  second-job:
+    name: Second Job
+    needs: [ first-job ]
+    if: ${{ needs.first-job.outputs.changes == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run script.sh
+        run: sh ${{ inputs.path }}

@@ -1,0 +1,37 @@
+name: Deploy CDC Webserver (On PR Merge)
+
+on:
+  pull_request:
+    types: [ closed ]
+    branches: [ main ]
+    paths-ignore:
+      - 'scripts/**'
+  repository_dispatch:
+    types: [ deploy-cdc-webserver ]
+
+concurrency:
+  group: cdc-webserver-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  first-job:
+    if: (github.ref == 'refs/heads/main') && (github.event_name == 'repository_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true))
+    name: (PROD) Build CDC Webserver Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run test.js
+        run: |
+          node --version
+          node test.js
+
+  second-job:
+    if: (github.ref == 'refs/heads/main') && (github.event_name == 'repository_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true))
+    name: (PROD) Deploy CDC Webserver Image
+    needs: first-job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run echo
+        run: |
+          echo "Deploying CDC Webserver..."

@@ -1,0 +1,88 @@
+name: Infrastructure Deployment to AWS
+
+on:
+  pull_request:
+    types: [ closed ]
+    branches: [ main ]
+    paths:
+      - 'scripts/**/*.sh'
+  workflow_dispatch:
+    inputs:
+      script:
+        description: 'Script to run'
+        required: true
+        type: choice
+        options:
+          - script1.sh
+          - script2.sh
+        default: script1.sh
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+run-name: ${{ github.event_name == 'workflow_dispatch' && format('Manual Deployment of {0}', github.event.inputs.script) || '' }}
+
+jobs:
+  setup:
+    if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || github.event_name == 'workflow_dispatch'
+    name: Setup Modules and Environment
+    runs-on: ubuntu-latest
+
+    outputs:
+      scripts: ${{ steps.pull_request.outputs.scripts || steps.workflow_dispatch.outputs.scripts }}
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: 🔎 Detect Changes
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            script1:
+              - 'scripts/script1.sh'
+            script2:
+              - 'scripts/script2.sh'
+
+      - name: ⚙️ Set up on Pull-Request
+        if: github.event_name == 'pull_request'
+        id: pull_request
+        run: |
+          echo "scripts=${{ steps.changes.outputs.changes }}" >> $GITHUB_OUTPUT
+
+      - name: ⚙️ Set up on Workflow-Dispatch
+        if: github.event_name == 'workflow_dispatch'
+        id: workflow_dispatch
+        run: |
+          echo "scripts=['${{ github.event.inputs.script }}']" >> $GITHUB_OUTPUT
+
+  first-script-run:
+    needs: setup
+    if: contains(needs.setup.outputs.scripts, 'script1')
+    name: Run Script 1
+    uses: ./.github/workflows/reusable-terraform-apply.yml
+    with:
+      path: 'scripts/script1.sh'
+    secrets: inherit
+
+  second-script-run:
+    needs: setup
+    if: contains(needs.setup.outputs.scripts, 'script2')
+    name: Run Script 2
+    uses: ./.github/workflows/reusable-terraform-apply.yml
+    with:
+      path: 'scripts/script2.sh'
+    secrets: inherit
+
+  notify-cdc-webserver:
+    needs: [first-script-run, second-script-run]
+    if: ${{ always() && (needs.first-script-run.result == 'success' || needs.second-script-run.result == 'success') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger CDC Webserver via repository_dispatch
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          event-type: deploy-cdc-webserver
