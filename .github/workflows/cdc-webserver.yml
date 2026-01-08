@@ -30,7 +30,6 @@ jobs:
               - 'scripts/**'
 
   first-job:
-    needs: check-changed-files
     if: github.event_name == 'repository_dispatch' || needs.check-changed-files.outputs.flag == 'false'
     name: (PROD) Build CDC Webserver Image
     runs-on: ubuntu-latest
