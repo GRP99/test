@@ -21,6 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - uses: actions/setup-node@v6
+
       - name: Run test.js
         run: |
           node --version

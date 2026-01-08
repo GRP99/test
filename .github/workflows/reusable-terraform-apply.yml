@@ -14,11 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
-    permissions:
-      contents: read
-      id-token: write
-      actions: read
-
     outputs:
       changes: ${{ steps.flag.outputs.changes }}
 
@@ -32,9 +27,7 @@ jobs:
     needs: [ first-job ]
     if: ${{ needs.first-job.outputs.changes == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+
     steps:
       - uses: actions/checkout@v5
 
