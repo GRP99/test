@@ -79,7 +79,7 @@ jobs:
 
   notify-cdc-webserver:
     needs: [first-script-run, second-script-run]
-    if: ${{ !failure() && !cancelled() && github.event_name == 'pull_request' }}
+    if: ${{ !failure() && !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.merged == true }}
     runs-on: ubuntu-latest
     steps:
       - name: Trigger CDC Webserver via repository_dispatch
