@@ -26,12 +26,56 @@ jobs:
     if: needs.detect-changes.outputs.infrastructure == 'true'
     uses: ./.github/workflows/infrastructure-deploy.yml
 
-  build-deploy:
+  first-job:
     needs:
       - detect-changes
       - infrastructure
     if: |
-      always() &&
-      (needs.detect-changes.outputs.infrastructure != 'true' ||
-       needs.infrastructure.result == 'success')
-    uses: ./.github/workflows/cdc-webserver.yml
+      always() && github.ref == 'refs/heads/main' &&
+      (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+
+      - name: Run test.js
+        run: |
+          node --version
+          node test.js
+
+  second-job:
+    needs: first-job
+    if: needs.first-job.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run echo
+        run: |
+          echo "Deploying CDC Webserver..."
+
+  third-job:
+    needs:
+      - detect-changes
+      - infrastructure
+    if: |
+      always() && github.ref == 'refs/heads/develop' &&
+      (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+
+      - name: Run test.js
+        run: |
+          node --version
+          node test.js
+
+  fourth-job:
+    needs: third-job
+    if: needs.third-job.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run echo
+        run: |
+          echo "Deploying CDC Webserver (2)..."
