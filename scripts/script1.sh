@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exit 1
+echo "Hello, world!!"
