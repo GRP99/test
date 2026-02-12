@@ -15,10 +15,6 @@ on:
 
 run-name: ${{ github.event_name == 'workflow_dispatch' && format('Manual Deployment of {0}', github.event.inputs.script) || '' }}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   setup:
     name: Setup Modules and Environment
