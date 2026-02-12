@@ -27,3 +27,27 @@ jobs:
       - name: Run echo
         run: |
           echo "Deploying CDC Webserver..."
+
+  third-job:
+    if: github.ref == 'refs/heads/develop'
+    name: (PROD) Build CDC Webserver Image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+
+      - name: Run test.js
+        run: |
+          node --version
+          node test.js
+
+  fourth-job:
+    needs: third-job
+    if: github.ref == 'refs/heads/develop'
+    name: (PROD) Deploy CDC Webserver Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run echo
+        run: |
+          echo "Deploying CDC Webserver (2)..."
