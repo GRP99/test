@@ -1,11 +1,7 @@
 name: Infrastructure Deployment to AWS
 
 on:
-  pull_request:
-    types: [ closed ]
-    branches: [ main ]
-    paths:
-      - 'scripts/**/*.sh'
+  workflow_call:
   workflow_dispatch:
     inputs:
       script:
@@ -17,27 +13,22 @@ on:
           - script2.sh
         default: script1.sh
 
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
-
 run-name: ${{ github.event_name == 'workflow_dispatch' && format('Manual Deployment of {0}', github.event.inputs.script) || '' }}
 
 jobs:
   setup:
-    if: (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || github.event_name == 'workflow_dispatch'
     name: Setup Modules and Environment
     runs-on: ubuntu-latest
 
     outputs:
-      scripts: ${{ steps.pull_request.outputs.scripts || steps.workflow_dispatch.outputs.scripts }}
+      scripts: ${{ steps.workflow_call.outputs.scripts || steps.workflow_dispatch.outputs.scripts }}
 
     steps:
-      - name: 📥 Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v6
 
-      - name: 🔎 Detect Changes
-        if: github.event_name == 'pull_request'
+      - name: Detect Changes
+        if: github.event_name == 'workflow_call'
         uses: dorny/paths-filter@v3
         id: changes
         with:
@@ -47,13 +38,13 @@ jobs:
             script2:
               - 'scripts/script2.sh'
 
-      - name: ⚙️ Set up on Pull-Request
-        if: github.event_name == 'pull_request'
-        id: pull_request
+      - name: Set up on Workflow-Call
+        if: github.event_name == 'workflow_call'
+        id: workflow_call
         run: |
           echo "scripts=${{ steps.changes.outputs.changes }}" >> $GITHUB_OUTPUT
 
-      - name: ⚙️ Set up on Workflow-Dispatch
+      - name: Set up on Workflow-Dispatch
         if: github.event_name == 'workflow_dispatch'
         id: workflow_dispatch
         run: |
@@ -76,13 +67,3 @@ jobs:
     with:
       path: 'scripts/script2.sh'
     secrets: inherit
-
-  notify-cdc-webserver:
-    needs: [first-script-run, second-script-run]
-    if: ${{ !failure() && !cancelled() && github.event_name == 'pull_request' && github.event.pull_request.merged == true }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger CDC Webserver via repository_dispatch
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          event-type: deploy-cdc-webserver

@@ -1,48 +1,11 @@
 name: Deploy CDC Webserver (On PR Merge)
 
 on:
-  pull_request:
-    types: [ closed ]
-    branches: [ main ]
-    paths-ignore:
-      - 'scripts/**'
-  repository_dispatch:
-    types: [ deploy-cdc-webserver ]
-
-concurrency:
-  group: cdc-webserver-${{ github.ref }}
-  cancel-in-progress: true
+  workflow_call:
 
 jobs:
-  check-changed-files:
-    name: Check Changed Files
-    runs-on: ubuntu-latest
-    outputs:
-      skip_next_jobs: ${{ steps.set-flag.outputs.skip_next_jobs }}
-    steps:
-      - if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
-        name: Path Changes Filter
-        uses: dorny/paths-filter@v3
-        id: changes
-        with:
-          filters: |
-            scripts:
-              - 'scripts/**'
-
-      - name: Set Flag Output
-        id: set-flag
-        run: |
-          SKIP_NEXT_JOBS="true"
-          if [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
-            SKIP_NEXT_JOBS="false"
-          elif [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
-            SKIP_NEXT_JOBS="${{ steps.changes.outputs.scripts }}"
-          fi
-          echo "skip_next_jobs=$SKIP_NEXT_JOBS" >> $GITHUB_OUTPUT
-
   first-job:
-    needs: check-changed-files
-    if: github.ref == 'refs/heads/main' && needs.check-changed-files.outputs.skip_next_jobs == 'false'
+    if: github.ref == 'refs/heads/main'
     name: (PROD) Build CDC Webserver Image
     runs-on: ubuntu-latest
     steps:
@@ -57,7 +20,7 @@ jobs:
 
   second-job:
     needs: first-job
-    if: github.ref == 'refs/heads/main' && needs.check-changed-files.outputs.skip_next_jobs == 'false'
+    if: github.ref == 'refs/heads/main'
     name: (PROD) Deploy CDC Webserver Image
     runs-on: ubuntu-latest
     steps:

@@ -1,0 +1,36 @@
+name: Orchestrator
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      infrastructure: ${{ steps.filter.outputs.infrastructure }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            infrastructure:
+              - 'scripts/**/*.sh'
+
+  infrastructure:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.infrastructure == 'true'
+    uses: ./.github/workflows/infrastructure-deploy.yml
+
+  build-deploy:
+    needs:
+      - detect-changes
+      - infrastructure
+    if: |
+      always() &&
+      (needs.detect-changes.outputs.infrastructure != 'true' ||
+       needs.infrastructure.result == 'success')
+    uses: ./.github/workflows/cdc-webserver.yml
