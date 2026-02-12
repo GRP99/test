@@ -46,7 +46,7 @@ jobs:
 
   second-job:
     needs: first-job
-    if: needs.first-job.result == 'success'
+    if: always() && needs.first-job.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Run echo
@@ -73,7 +73,7 @@ jobs:
 
   fourth-job:
     needs: third-job
-    if: needs.third-job.result == 'success'
+    if: always() && needs.third-job.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Run echo
