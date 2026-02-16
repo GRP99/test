@@ -56,7 +56,7 @@ jobs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.build_server == 'true' &&
+      always() && !cancelled() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.build_server == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
     uses: ./.github/workflows/reusable-cdc-build-server-build-image.yml
     with:
@@ -64,7 +64,7 @@ jobs:
 
   deploy-cdc-build-server-prod:
     needs: build-cdc-build-server-prod
-    if: always() && needs.build-cdc-build-server-prod.result == 'success'
+    if: always() && !cancelled() && needs.build-cdc-build-server-prod.result == 'success'
     uses: ./.github/workflows/reusable-cdc-build-server-deploy-image.yml
     with:
       environment-name: 'prod'
@@ -74,7 +74,7 @@ jobs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_cam_worker == 'true' &&
+      always() && !cancelled() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_cam_worker == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
     uses: ./.github/workflows/reusable-cdc-cam-worker-build-image.yml
     with:
@@ -82,7 +82,7 @@ jobs:
 
   deploy-cdc-cam-worker-prod:
     needs: build-cdc-cam-worker-prod
-    if: always() && needs.build-cdc-cam-worker-prod.result == 'success'
+    if: always() && !cancelled() && needs.build-cdc-cam-worker-prod.result == 'success'
     uses: ./.github/workflows/reusable-cdc-cam-worker-deploy-image.yml
     with:
       environment-name: 'prod'
@@ -92,7 +92,7 @@ jobs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.cdc_clients_worker == 'true' &&
+      always() && !cancelled() && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.cdc_clients_worker == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
     uses: ./.github/workflows/reusable-cdc-clients-worker-build-image.yml
     with:
@@ -100,7 +100,7 @@ jobs:
 
   deploy-cdc-clients-worker-int:
     needs: build-cdc-clients-worker-int
-    if: always() && needs.build-cdc-clients-worker-int.result == 'success'
+    if: always() && !cancelled() && needs.build-cdc-clients-worker-int.result == 'success'
     uses: ./.github/workflows/reusable-cdc-clients-worker-deploy-image.yml
     with:
       environment-name: 'int'
@@ -110,7 +110,7 @@ jobs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_clients_worker == 'true' &&
+      always() && !cancelled() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_clients_worker == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
     uses: ./.github/workflows/reusable-cdc-clients-worker-build-image.yml
     with:
@@ -118,7 +118,7 @@ jobs:
 
   deploy-cdc-clients-worker-prod:
     needs: build-cdc-clients-worker-prod
-    if: always() && needs.build-cdc-clients-worker-prod.result == 'success'
+    if: always() && !cancelled() && needs.build-cdc-clients-worker-prod.result == 'success'
     uses: ./.github/workflows/reusable-cdc-clients-worker-deploy-image.yml
     with:
       environment-name: 'prod'
@@ -128,7 +128,7 @@ jobs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_data_worker == 'true' &&
+      always() && !cancelled() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_data_worker == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
     uses: ./.github/workflows/reusable-cdc-data-worker-build-image.yml
     with:
@@ -136,7 +136,7 @@ jobs:
 
   deploy-cdc-data-worker-prod:
     needs: build-cdc-data-worker-prod
-    if: always() && needs.build-cdc-data-worker-prod.result == 'success'
+    if: always() && !cancelled() && needs.build-cdc-data-worker-prod.result == 'success'
     uses: ./.github/workflows/reusable-cdc-data-worker-deploy-image.yml
     with:
       environment-name: "prod"
@@ -146,7 +146,7 @@ jobs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.cdc_services_website == 'true' &&
+      always() && !cancelled() && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.cdc_services_website == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
     uses: ./.github/workflows/reusable-cdc-webserver-build-image.yml
     with:
@@ -154,7 +154,7 @@ jobs:
 
   deploy-cdc-webserver-int:
     needs: build-cdc-webserver-int
-    if: always() && needs.build-cdc-webserver-int.result == 'success'
+    if: always() && !cancelled() && needs.build-cdc-webserver-int.result == 'success'
     uses: ./.github/workflows/reusable-cdc-webserver-deploy-image.yml
     with:
       environment-name: 'int'
@@ -164,7 +164,7 @@ jobs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_services_website == 'true' &&
+      always() && !cancelled() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_services_website == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
     uses: ./.github/workflows/reusable-cdc-webserver-build-image.yml
     with:
@@ -172,7 +172,7 @@ jobs:
 
   deploy-cdc-webserver-prod:
     needs: build-cdc-webserver-prod
-    if: always() && needs.build-cdc-webserver-prod.result == 'success'
+    if: always() && !cancelled() && needs.build-cdc-webserver-prod.result == 'success'
     uses: ./.github/workflows/reusable-cdc-webserver-deploy-image.yml
     with:
       environment-name: 'prod'
@@ -182,7 +182,7 @@ jobs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.pipeline == 'true' &&
+      always() && !cancelled() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.pipeline == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
     uses: ./.github/workflows/reusable-pipeline-build-image.yml
     with:
@@ -190,7 +190,7 @@ jobs:
 
   deploy-pipeline-prod:
     needs: build-pipeline-prod
-    if: always() && needs.build-pipeline-prod.result == 'success'
+    if: always() && !cancelled() && needs.build-pipeline-prod.result == 'success'
     uses: ./.github/workflows/reusable-pipeline-deploy-image.yml
     with:
       environment-name: 'prod'
