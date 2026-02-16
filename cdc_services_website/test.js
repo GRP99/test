@@ -5,7 +5,6 @@ async function waitOneMinute() {
   });
 }
 
-// Main execution - waits one minute and then proceeds
 async function main() {
   console.log('Starting wait...');
   await waitOneMinute();
