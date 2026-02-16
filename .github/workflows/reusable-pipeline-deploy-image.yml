@@ -1,0 +1,34 @@
+name: (Reusable) Deploy Pipeline Image
+on:
+  workflow_call:
+    inputs:
+      environment-name:
+        description: 'Environment name (e.g., dev, prod)'
+        type: string
+        required: true
+      image-tag:
+        description: "The Image Tag to Deploy"
+        type: string
+        required: false
+        default: ''
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-central-1
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.environment-name }} Image
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Run echo
+        run: |
+          echo "Deploying Pipeline Worker..."

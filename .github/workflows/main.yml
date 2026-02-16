@@ -1,4 +1,4 @@
-name: Orchestrator
+name: Deploy (On PR Merge)
 
 on:
   push:
@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       infrastructure: ${{ steps.filter.outputs.infrastructure }}
+      build_server: ${{ steps.filter.outputs.build_server }}
+      cdc_cam_worker: ${{ steps.filter.outputs.cdc_cam_worker }}
+      cdc_clients_worker: ${{ steps.filter.outputs.cdc_clients_worker }}
+      cdc_data_worker: ${{ steps.filter.outputs.cdc_data_worker }}
+      cdc_services_website: ${{ steps.filter.outputs.cdc_services_website }}
+      pipeline: ${{ steps.filter.outputs.pipeline }}
     steps:
       - uses: actions/checkout@v6
 
@@ -19,63 +25,164 @@ jobs:
         with:
           filters: |
             infrastructure:
-              - 'scripts/**/*.sh'
+              - scripts/**/*.sh
+            build_server:
+              - build_server/**
+              - shared_code/**
+            cdc_cam_worker:
+              - cdc_cam_worker/**
+              - shared_code/**
+            cdc_clients_worker:
+              - cdc_clients_worker/**
+              - shared_code/**
+            cdc_data_worker:
+              - cdc_data_worker/**
+              - shared_code/**
+            cdc_services_website:
+              - automation/**
+              - cdc_services_website/**
+              - shared_code/**
+            pipeline:
+              - pipeline/**
+              - shared_code/**
 
   infrastructure:
     needs: detect-changes
     if: needs.detect-changes.outputs.infrastructure == 'true'
     uses: ./.github/workflows/infrastructure-deploy.yml
 
-  first-job:
+  build-cdc-build-server-prod:
     needs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/main' &&
+      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.build_server == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
+    uses: ./.github/workflows/reusable-cdc-build-server-build-image.yml
+    with:
+      environment-name: 'prod'
 
-      - uses: actions/setup-node@v6
+  deploy-cdc-build-server-prod:
+    needs: build-cdc-build-server-prod
+    uses: ./.github/workflows/reusable-cdc-build-server-deploy-image.yml
+    with:
+      environment-name: 'prod'
 
-      - name: Run test.js
-        run: |
-          node --version
-          node test.js
-
-  second-job:
-    needs: first-job
-    if: always() && needs.first-job.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run echo
-        run: |
-          echo "Deploying CDC Webserver..."
-
-  third-job:
+  build-cdc-cam-worker-prod:
     needs:
       - detect-changes
       - infrastructure
     if: |
-      always() && github.ref == 'refs/heads/develop' &&
+      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_cam_worker == 'true' &&
       (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
+    uses: ./.github/workflows/reusable-cdc-cam-worker-build-image.yml
+    with:
+      environment-name: 'prod'
 
-      - uses: actions/setup-node@v6
+  deploy-cdc-cam-worker-prod:
+    needs: build-cdc-cam-worker-prod
+    uses: ./.github/workflows/reusable-cdc-cam-worker-deploy-image.yml
+    with:
+      environment-name: 'prod'
 
-      - name: Run test.js
-        run: |
-          node --version
-          node test.js
+  build-cdc-clients-worker-int:
+    needs:
+      - detect-changes
+      - infrastructure
+    if: |
+      always() && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.cdc_clients_worker == 'true' &&
+      (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
+    uses: ./.github/workflows/reusable-cdc-clients-worker-build-image.yml
+    with:
+      environment-name: 'int'
 
-  fourth-job:
-    needs: third-job
-    if: always() && needs.third-job.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run echo
-        run: |
-          echo "Deploying CDC Webserver (2)..."
+  deploy-cdc-clients-worker-int:
+    needs: build-cdc-clients-worker-int
+    uses: ./.github/workflows/reusable-cdc-clients-worker-deploy-image.yml
+    with:
+      environment-name: 'int'
+
+  build-cdc-clients-worker-prod:
+    needs:
+      - detect-changes
+      - infrastructure
+    if: |
+      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_clients_worker == 'true' &&
+      (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
+    uses: ./.github/workflows/reusable-cdc-clients-worker-build-image.yml
+    with:
+      environment-name: 'prod'
+
+  deploy-cdc-clients-worker-prod:
+    needs: build-cdc-clients-worker-prod
+    uses: ./.github/workflows/reusable-cdc-clients-worker-deploy-image.yml
+    with:
+      environment-name: 'prod'
+
+  build-cdc-data-worker-prod:
+    needs:
+      - detect-changes
+      - infrastructure
+    if: |
+      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_data_worker == 'true' &&
+      (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
+    uses: ./.github/workflows/reusable-cdc-data-worker-build-image.yml
+    with:
+      environment-name: "prod"
+
+  deploy-cdc-data-worker-prod:
+    needs: build-cdc-data-worker-prod
+    uses: ./.github/workflows/reusable-cdc-data-worker-deploy-image.yml
+    with:
+      environment-name: "prod"
+
+  build-cdc-webserver-int:
+    needs:
+      - detect-changes
+      - infrastructure
+    if: |
+      always() && github.ref == 'refs/heads/develop' && needs.detect-changes.outputs.cdc_services_website == 'true' &&
+      (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
+    uses: ./.github/workflows/reusable-cdc-webserver-build-image.yml
+    with:
+      environment-name: 'int'
+
+  deploy-cdc-webserver-int:
+    needs: build-cdc-webserver-int
+    uses: ./.github/workflows/reusable-cdc-webserver-deploy-image.yml
+    with:
+      environment-name: 'int'
+
+  build-cdc-webserver-prod:
+    needs:
+      - detect-changes
+      - infrastructure
+    if: |
+      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.cdc_services_website == 'true' &&
+      (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
+    uses: ./.github/workflows/reusable-cdc-webserver-build-image.yml
+    with:
+      environment-name: 'prod'
+
+  deploy-cdc-webserver-prod:
+    needs: build-cdc-webserver-prod
+    uses: ./.github/workflows/reusable-cdc-webserver-deploy-image.yml
+    with:
+      environment-name: 'prod'
+
+  build-pipeline-prod:
+    needs:
+      - detect-changes
+      - infrastructure
+    if: |
+      always() && github.ref == 'refs/heads/main' && needs.detect-changes.outputs.pipeline == 'true' &&
+      (needs.detect-changes.outputs.infrastructure != 'true' || needs.infrastructure.result == 'success')
+    uses: ./.github/workflows/reusable-pipeline-build-image.yml
+    with:
+      environment-name: 'prod'
+
+  deploy-pipeline-prod:
+    needs: build-pipeline-prod
+    uses: ./.github/workflows/reusable-pipeline-deploy-image.yml
+    with:
+      environment-name: 'prod'
