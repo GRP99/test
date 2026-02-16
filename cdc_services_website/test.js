@@ -1,4 +1,4 @@
-// Function to wait one minute (60 seconds)
+
 async function waitOneMinute() {
   return new Promise(resolve => {
     setTimeout(resolve, 60000); // 60,000 milliseconds = 1 minute

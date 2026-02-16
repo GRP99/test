@@ -172,7 +172,6 @@ jobs:
 
   deploy-cdc-webserver-prod:
     needs: build-cdc-webserver-prod
-    if: always() && !cancelled() && needs.build-cdc-webserver-prod.result == 'success'
     uses: ./.github/workflows/reusable-cdc-webserver-deploy-image.yml
     with:
       environment-name: 'prod'
