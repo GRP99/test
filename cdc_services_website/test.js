@@ -12,5 +12,4 @@ async function main() {
   console.log('One minute has passed! Proceeding...');
 }
 
-// Run the main function
 await main();
