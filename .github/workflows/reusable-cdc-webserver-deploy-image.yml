@@ -12,7 +12,9 @@ on:
         required: false
         default: ''
 
-
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   AWS_REGION: eu-central-1
