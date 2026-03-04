@@ -23,7 +23,7 @@ jobs:
       - id: filter
         uses: dorny/paths-filter@v3
         with:
-          base: ${{ github.event.before }}
+          base: ${{ github.ref_name }}
           filters: |
             infrastructure:
               - scripts/**/*.sh
